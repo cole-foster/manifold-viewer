@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Graph Viewer</title>
+
+        <!-- JavaScript Imports -->
+        <script src='./scripts/jquery.js'></script>
+        <script src='./scripts/cytoscape.min.js'></script>
+        <script src='./scripts/cola.min.js'></script>
+        <script src='./scripts/cytoscape-cola.js'></script>
+        <script src='./scripts/weaver.min.js'></script>
+        <script src='./scripts/cytoscape-spread.js'></script>
+        <script src='./scripts/cytoscape-euler.js'></script>
+        <script src='./scripts/klay.js'></script>
+        <script src='./scripts/cytoscape-klay.js'></script>
+        <script src="https://unpkg.com/layout-base/layout-base.js"></script>
+        <script src="https://unpkg.com/cose-base/cose-base.js"></script>
+        <script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
+
+        <!-- CSS Stylesheets -->
+        <link rel="stylesheet" type="text/css" href="style.css">
+
+    </head>
+
+    <body>
+
+        <!-- Page Title and Centered Text -->
+        <h2 id='page-text'> Geodesic Flow Graph Viewer</h2> 
+        <h4 id='page-text'> 2021-07-11 SIFT Flow Range RNG Comparison- Resolution 1/8 (RED), Resolution 1/16 (GREEN), Both (BLUE)</h4>
+    
+        <!-- Control Panel -->
+        <div id="control panel">
+
+            <!-- Top Buttons for Graph Input and Clear -->
+            <div id="graph-io", class="div-button">
+                <button class="button" type="button" id="clear-button" onclick="clearGraph()"> Clear Graph </button> 
+                <button class="button" type="button" id="button-input-reference"> Input Edges</button>
+                <input type="file" id="hidden-input-edges">
+            </div>
+
+            <!-- Second Row Buttons for Layouts -->
+            <div id="graph-layouts", class="div-button">
+                <button class="button" type="button" id="button-random" onclick="runLayoutRandom()"> Random</button>
+                <button class="button" type="button" id="button-circle" onclick="runLayoutCircle()"> Circle</button>
+                <button class="button" type="button" id="button-cola" onclick="runLayoutCola()"> Cola</button>
+                <button class="button" type="button" id="button-spread" onclick="runLayoutSpread()"> Spread</button>
+                <button class="button" type="button" id="button-euler" onclick="runLayoutEuler()"> Euler</button>
+                <button class="button" type="button" id="button-klay" onclick="runLayoutKlay()"> Klay</button>
+                <button class="button" type="button" id="button-fCose" onclick="runLayoutFCose()"> FCose</button>
+            </div>
+        </div>
+
+        <!-- Container for graph dsiplay and geodesic path display -->
+        <div id='cytoscape-container' class='flex-container'>
+
+            <!-- main graph container -->
+            <div id='main-graph-flex'>
+
+                <!-- display number of nodes, number of edges -->
+                <div id='main-graph-display'>
+                    <span id='main-graph-nodes' style="padding-right: 20px;"> Number of Nodes: </span>
+                    <span id='main-graph-edges' style="padding-left: 20px;"> Number of Edges: </span>
+                </div>
+
+                <!-- cytoscape graph container -->
+                <div id='cy-graph-container'>
+                    <div id="cy" ></div>
+                </div>
+            </div>
+
+            <div id='side-flex-container'>
+
+                <!-- Neighbor Graph -->
+                <div id='side-flex-boxes'>
+                    <p style='text-align: center;'> Neighbors Explorer </p>
+
+                    <!-- Fit to Window Button  -->
+                    <div class='geo-control-container'' style="padding-left:5px;">
+                        <button class="button" type="button" onclick="runNeighborsToFit()" > Fit To Window </button>
+                    </div>
+
+                    <!-- Cytoscape to Show Neighbors Graph -->
+                    <div id='cy-neighbors-graph-container'>
+                        <div id='cy-neighbors'></div>
+                    </div>
+                </div>
+
+                <!-- Geodesic Graph -->
+                <div id='side-flex-boxes'>
+                    <p style='text-align: center;'> Geodesic Path </p>
+
+                    <!-- Input Src and Tgt -->
+                    <div class='side-control-center'>
+                        <label for='input-path-source' style="padding-left: 5px;"> Source Node: </label>
+                        <input type="number" class='input-path' id='input-path-source' value=1>
+
+                        <label for='input-path-target' style="padding-left: 5px;"> Target Node: </label>
+                        <input type="number" class='input-path' id='input-path-target' value=2>
+                    </div>
+
+                    <!-- Output Geodesic Distance  -->
+                    <div class='geo-control-container'>
+                        <span id='geo-output-distance' style="padding-left: 5px;"> Geodesic Distance: </span>
+                    </div>
+
+                    <!-- Fit to Window Button  -->
+                    <div class='geo-control-container' style="padding-left:5px;">
+                        <button class="button" type="button" onclick="runGeodesicToFit()" > Fit To Window </button>
+                    </div>
+
+                    <!-- Cytoscape to Output Geodesic Path -->
+                    <div id='cy-geo-graph-container'>
+                        <div id='cy-geo'></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <script src='graph.js'></script>
+  
+    </body>
+
+</html>

@@ -1,0 +1,775 @@
+/*
+//-------------------------------------------
+// ONLOAD DEFAULTS FOR THE GRAPH
+//-------------------------------------------
+*/
+
+// initialize within #cy element
+var cy = cytoscape ({
+    container: document.getElementById('cy')
+});
+
+var cy_geo = cytoscape ({
+    container: document.getElementById('cy-geo')
+})
+
+var cy_neighbors = cytoscape ({
+    container: document.getElementById('cy-neighbors')
+})
+
+
+
+// for model over all viewpoints graph
+var imageDirectory = './assets/bicycle/';
+var imageListFile = './assets/modelNames/bicycle.txt';
+
+// for viewpoint over all models graph
+//var imageDirectory = './assets/model0_res1/';
+//var imageListFile = './imageNames_viewpoint.txt';
+
+var edgeDirectory = './edge_files/2021-08-14/'
+var edgeListFile;// = '2021-06-24_SIFT_RNG_Edges_2.csv';
+//loadEdges();
+
+// initializations
+var graphCount = 0
+var consecutiveEdgeCount = 0;
+var imageList = []
+
+
+
+/*
+//-------------------------------------------
+// INTERACTIVE PORTIONS OF THE APP
+//-------------------------------------------
+*/
+
+// link input button to file input with jQuery
+$('#button-input-reference').click(function(){
+    $('#hidden-input-edges').click();
+});
+
+$("#hidden-input-edges").click(function(e) { 
+    $('hidden-input-edges').val(''); 
+})
+
+// button to add graphs
+document.getElementById('hidden-input-edges')
+        .addEventListener('change', function() {
+    edgeListFile = this.files[0].name;
+    loadEdges(edgeListFile)
+})
+
+// input for source geodesic path
+document.getElementById('input-path-source')
+        .addEventListener('change', function() {
+    
+    console.log("Change in Geodesic Source Node");
+
+    loadGeodesicPath();
+})
+
+// input for target geodesic path
+document.getElementById('input-path-target')
+        .addEventListener('change', function() {
+    
+    console.log("Change in Geodesic Target Node");
+
+    loadGeodesicPath();
+})
+
+
+
+
+/*
+//-------------------------------------------
+// FUNCTIONS DIRECTLY CALLED BY INTERACTIVE PORTIONS
+//-------------------------------------------
+*/
+
+// load edges via 
+async function loadEdges() {
+    console.log("Loading edge file: ", edgeListFile)
+    if (graphCount == 0) {
+        await loadGraph(imageListFile,edgeListFile);
+    } else if (graphCount == 1) {
+        await addEdges(edgeListFile);
+    } else {
+        console.log("Max 2 Graphs can be uploaded")
+    }
+    graphCount++;
+
+    // update number of elements
+    document.getElementById('main-graph-nodes').innerHTML = "Number of Nodes: "+cy.nodes().length;
+    document.getElementById('main-graph-edges').innerHTML = "Number of Edges: "+cy.edges().length;
+
+    await loadGeodesicPath();
+    await loadNeighborsGraph(1);
+
+    //await printGeodesicDistances();
+}
+
+async function loadGeodesicPath() {
+    console.log("Loading Geodesic Path...");
+
+    if (imageList == []) {
+        console.log("No Image List Loaded");
+        return;
+    }
+
+    // source node image
+    src_id = document.getElementById('input-path-source').value;
+
+    // target node image
+    tgt_id = document.getElementById('input-path-target').value;
+
+    // geodesic path via djikstra algorithm
+    geo_path = cy.elements().dijkstra("#"+src_id,function(edge) {
+        return edge.data('distance')
+    })
+
+    // output geodesic distance
+    var distanceToTarget = geo_path.distanceTo(cy.$("#"+tgt_id))
+    document.getElementById('geo-output-distance').innerHTML = "Geodesic Distance: " + distanceToTarget.toFixed(2);
+    console.log(distanceToTarget)
+
+    // geodesic path
+    var pathToTarget = geo_path.pathTo(cy.$("#"+tgt_id))
+    console.log(pathToTarget)
+
+    await loadGeodesicGraph(pathToTarget);
+}
+
+
+/*
+//-------------------------------------------
+// DECLARING STYLING OF THE FULL GRAPH
+//-------------------------------------------
+*/
+
+var cy_edgeColors = ['red','green','blue']
+
+// default layout for graph
+var cy_layout = {
+    name: 'circle',
+    random: true
+};
+
+// default stylesheet for graph
+var cy_style = [
+
+    // nodes
+    {
+        selector: 'node',
+        style:
+        {
+            'shape':'rectangle',
+            'background-image': 'data(imagePath)',
+            'background-fit': 'contain',
+            'label':'data(label)'
+        }
+    },
+
+    // edges
+    {
+        selector: 'edge',
+        style:
+        {
+            //'label': 'data(distance)',
+            'width': '4px',
+        }
+    },
+
+    // classes
+    {
+        selector: '.red',
+        style: {
+            'line-color':'red'
+        }
+    },
+    {
+        selector: '.green',
+        style: {
+            'line-color':'green'
+        }
+    },
+    {
+        selector: '.blue',
+        style: {
+            'line-color':'blue'
+        }
+    },
+    {
+        selector: '.purple',
+        style: {
+            'line-color':'purple'
+        }
+    },
+    {
+        selector: '.black',
+        style: {
+            'line-color':'black'
+        }
+    }
+];
+
+/*
+//-------------------------------------------
+// DECLARING STYLING OF THE GEODESIC FLOW GRAPH
+//-------------------------------------------
+*/
+
+
+// default layout for graph
+var cy_geo_layout = {
+    name: 'circle'
+};
+
+// default stylesheet for graph
+var cy_geo_style = [
+
+    // nodes
+    {
+        selector: 'node',
+        style:
+        {
+            'shape':'rectangle',
+            'background-image': 'data(imagePath)',
+            'background-fit': 'contain',
+            'label':'data(label)'
+        }
+    },
+
+    // edges
+    {
+        selector: 'edge',
+        style:
+        {
+            'label': 'data(label)',
+            'width': '4px',
+            'line-color': 'orange'
+        }
+    },
+
+    // classes
+    {
+        selector: '.red',
+        style: {
+            'line-color':'red'
+        }
+    },
+    {
+        selector: '.green',
+        style: {
+            'line-color':'green'
+        }
+    },
+    {
+        selector: '.blue',
+        style: {
+            'line-color':'blue'
+        }
+    },
+    {
+        selector: '.purple',
+        style: {
+            'line-color':'purple'
+        }
+    },
+    {
+        selector: '.black',
+        style: {
+            'line-color':'black'
+        }
+    },
+    {
+        selector: '.pink',
+        style: {
+            'line-color':'pink'
+        }
+    }
+];
+
+
+/*
+//-------------------------------------------
+// FUNCTIONS OF THE GRAPH
+//-------------------------------------------
+*/
+
+// add images via imageListFile
+function clearGraph()
+{
+    console.log("Clear Graph Container")
+    graphCount = 0;
+
+    // initialize within #cy element
+    cy = cytoscape 
+    ({
+        container: document.getElementById('cy')
+    });
+
+    cy_geo = cytoscape 
+    ({
+        container: document.getElementById('cy-geo')
+    });
+
+    cy_neighbors = cytoscape 
+    ({
+        container: document.getElementById('cy-neighbors')
+    });
+
+    cy_neighbors.on('tap', 'node', function( evt ){
+        console.log('hi tap')
+        console.log(evt.target)
+    });
+}
+
+// default layout for graph
+var cy_neighbors_layout = {
+    name: 'circle'
+};
+
+// default stylesheet for graph
+var cy_neighbors_style = [
+
+    // nodes
+    {
+        selector: 'node',
+        style:
+        {
+            'shape':'rectangle',
+            'background-image': 'data(imagePath)',
+            'background-fit': 'contain',
+            'label':'data(label)'
+        }
+    },
+
+    // edges
+    {
+        selector: 'edge',
+        style:
+        {
+            'label': 'data(label)',
+            'width': '4px',
+            'line-color': 'pink'
+        }
+    },
+
+    // classes
+    {
+        selector: '.red',
+        style: {
+            'line-color':'red'
+        }
+    },
+    {
+        selector: '.green',
+        style: {
+            'line-color':'green'
+        }
+    },
+    {
+        selector: '.blue',
+        style: {
+            'line-color':'blue'
+        }
+    },
+    {
+        selector: '.purple',
+        style: {
+            'line-color':'purple'
+        }
+    },
+    {
+        selector: '.black',
+        style: {
+            'line-color':'black'
+        }
+    },
+    {
+        selector: '.pink',
+        style: {
+            'line-color':'pink'
+        }
+    }
+];
+
+
+// add images via imageListFile
+async function loadGraph(imageListFile,edgeListFile)
+{
+    console.log("Load Initial Graph");
+    console.log(graphCount)
+    
+    var cy_elements = {
+        nodes: [],
+        edges: []
+    };
+
+    // Load Nodes and Images
+    const response1 = await fetch(imageListFile);
+    const data1 = await response1.text();
+    const imageNames = data1.split('\n');
+    imageList = []
+
+    // loop through image name file
+    for (var i = 0; i < imageNames.length; i++) {
+        var nodeData = {
+            data: {
+                id: i+1,
+                imagePath: imageDirectory + imageNames[i],
+                label: i+1//*4 //
+            }
+        }
+        cy_elements.nodes.push(nodeData)
+        imageList.push(imageDirectory + imageNames[i])
+    }
+    
+    // Load edges via graph file
+    const response2 = await fetch(edgeDirectory + edgeListFile);
+    const data2 = await response2.text();
+    const edges_raw = data2.split('\n');
+
+    console.log('try')
+    console.log(data2)
+
+    var numEdges = 0;
+
+    // loop through edges by source, target, edge length
+    var edge = []
+    for (let j = 0; j < edges_raw.length; j++)
+    {
+        edge = edges_raw[j].split(',');
+        if (edge == "")
+        {
+            break;
+        }
+
+        numEdges++;
+        var edgeData = {
+            data: {
+                'id': graphCount + ":" + edge[0]+'-'+edge[1],
+                'source': edge[0],
+                'target': edge[1],
+                'distance': parseFloat(edge[2]),
+                'label': parseFloat(edge[2]).toFixed(2)
+            },
+            classes: cy_edgeColors[0]
+        }
+        cy_elements.edges.push(edgeData);
+
+        if (Math.abs(edge[0]-edge[1]) == 1 || Math.abs(edge[0]-edge[1]) == 89)
+        {
+            consecutiveEdgeCount += 1;
+        }
+    }
+
+    console.log("Consecutive Edge Count: ", consecutiveEdgeCount);
+
+    cy = cytoscape ({
+        container: document.getElementById('cy'),
+        elements: cy_elements,
+        layout: cy_layout,
+        style: cy_style
+    })
+
+    console.log('Number of Edges: ', numEdges);
+
+    return;
+}
+
+
+// add images via imageListFile
+async function addEdges(edgeListFile)
+{
+    console.log("Add Second Graph");
+    console.log(graphCount)
+    cy_edges = []
+
+    // Load edges via graph file
+    const response1 = await fetch(edgeDirectory+edgeListFile);
+    const data1 = await response1.text();
+    const edges_raw = data1.split('\r\n');
+
+    var numEdges = 0;
+    var sharedEdges = 0;
+
+    // loop through edges by source, target, edge length
+    var edge = []
+    for (let j = 0; j < edges_raw.length; j++)
+    {
+        edge = edges_raw[j].split(',');
+        if (edge == "")
+        {
+            break;
+        }
+        numEdges++;
+
+        // check if edge exists
+        var edgeCheck1 = cy.getElementById("0:" + edge[0]+'-'+edge[1])
+        var edgeCheck2 = cy.getElementById("0:" + edge[1]+'-'+edge[0])
+        
+        if (edgeCheck1.length || edgeCheck2.length) {
+            sharedEdges++;
+            var edgeData = {
+                group: 'edges',
+                data: {
+                    'id': graphCount + ":" + edge[0]+'-'+edge[1],
+                    'source': edge[0],
+                    'target': edge[1],
+                    'distance': parseFloat(edge[2]),
+                    'label': parseFloat(edge[2]).toFixed(2)
+                },
+                classes: cy_edgeColors[2]
+            }
+            cy_edges.push(edgeData);
+
+        } else {
+            var edgeData = {
+                group: 'edges',
+                data: {
+                    'id': graphCount + ":" + edge[0]+'-'+edge[1],
+                    'source': edge[0],
+                    'target': edge[1],
+                    'distance': edge[2]
+                },
+                classes: cy_edgeColors[1]
+            }
+            cy_edges.push(edgeData);
+
+        }
+        
+    }
+
+    cy.add(cy_edges)
+    console.log('Number of Edges: ', numEdges);
+    console.log('Shared Edges: ', sharedEdges)
+
+    return;
+}
+
+
+
+
+// add images via imageListFile
+async function loadGeodesicGraph(pathObject)
+{
+    console.log("Load Geodesic Path Graph");
+    
+    // graph elements
+    var cy_geo_elements = {
+        nodes: [],
+        edges: []
+    };
+
+    // for each element in path list
+    pathObject.forEach(element => {
+        if (element._private.group == "nodes") {
+            var nodeData = {
+                data: {
+                    id: element._private.data.id,
+                    imagePath: element._private.data.imagePath,
+                    label: (element._private.data.id*4)
+                }
+            }
+            cy_geo_elements.nodes.push(nodeData)
+        } else if (element._private.group == "edges") {
+            var edgeData = {
+                data: {
+                    'id': element._private.data.id,
+                    'source': element._private.data.source,
+                    'target': element._private.data.target,
+                    'distance': element._private.data.distance,
+                    'label': element._private.data.distance.toFixed(2)
+                },
+            }
+            cy_geo_elements.edges.push(edgeData);
+        }
+    });
+
+    cy_geo = cytoscape ({
+        container: document.getElementById('cy-geo'),
+        elements: cy_geo_elements,
+        layout: cy_geo_layout,
+        style: cy_geo_style
+    })
+
+    return;
+}
+
+
+// add images via imageListFile
+async function printGeodesicDistances(pathObject)
+{
+    console.log("Printing all geodesic distances sorry!!");
+    var i,j;
+
+    for (i = 0; i < imageList.length; i++) 
+    {
+        geo_path1 = cy.elements().dijkstra("#"+(i),function(edge) {
+            return edge.data('distance')
+        })
+
+        if (i == 89) 
+        {  
+            j = 0;
+        }
+        else 
+        {
+            j = i+1;
+        }
+
+        geo_distance = geo_path1.distanceTo(cy.$("#"+(j)));
+
+        console.log(i,',',j,': ', geo_distance);
+
+    }
+
+    // geodesic path
+    //var pathToTarget = geo_path.pathTo(cy.$("#"+tgt_id))
+    //console.log(pathToTarget)
+
+    //await loadGeodesicGraph(pathToTarget);
+
+    return;
+}
+
+
+
+// add images via imageListFile
+async function loadNeighborsGraph(nodeID)
+{
+    console.log("Load Geodesic Path Graph");
+
+    neighborsObject = cy.$("#"+nodeID).neighborhood()
+    
+    // graph elements
+    var cy_neighbors_elements = {
+        nodes: [],
+        edges: []
+    };
+
+    var element = cy.$("#"+nodeID)[0]
+    console.log(element)
+    var nodeData = {
+        data: {
+            id: element._private.data.id,
+            imagePath: element._private.data.imagePath,
+            label: (element._private.data.id*4)
+        }
+    }
+    cy_neighbors_elements.nodes.push(nodeData)
+
+    neighborsObject.forEach(element => {
+        if (element._private.group == "nodes") {
+            var nodeData = {
+                data: {
+                    id: element._private.data.id,
+                    imagePath: element._private.data.imagePath,
+                    label: (element._private.data.id*4)
+                }
+            }
+            cy_neighbors_elements.nodes.push(nodeData)
+        } else if (element._private.group == "edges") {
+            var edgeData = {
+                data: {
+                    'id': element._private.data.id,
+                    'source': element._private.data.source,
+                    'target': element._private.data.target,
+                    'distance': element._private.data.distance,
+                    'label': element._private.data.distance.toFixed(2)
+                },
+            }
+            cy_neighbors_elements.edges.push(edgeData);
+        }
+    })
+
+    cy_neighbors = cytoscape ({
+        container: document.getElementById('cy-neighbors'),
+        elements: cy_neighbors_elements,
+        layout: cy_neighbors_layout,
+        style: cy_neighbors_style
+    })
+
+    cy_neighbors.on('tap', 'node', function( evt ){
+        console.log('hi tap')
+        let node = evt.target._private.data.id
+        loadNeighborsGraph(node)
+    });
+
+
+    return;
+}
+
+
+
+
+
+/*
+    LAYOUTS ON BUTTON CALL
+*/
+
+function runLayoutRandom() {
+    cy.layout({
+        name: 'random'
+    }).run()
+}
+
+function runLayoutCircle() {
+    cy.layout({
+        name: 'circle'
+    }).run()
+}
+
+function runLayoutCola() {
+    cy.layout({
+        name: 'cola'
+    }).run()
+}
+
+function runLayoutSpread() {
+    cy.layout({
+        name: 'spread'
+    }).run()
+}
+
+function runLayoutEuler() {
+    cy.layout({
+        name: 'euler'
+    }).run()
+}
+
+function runLayoutKlay() {
+    cy.layout({
+        name: 'klay'
+    }).run()
+}
+
+function runLayoutFCose() {
+    cy.layout({
+        name: 'fcose',
+        quality: 'proof', 
+        randomize: false,
+        animationDuration: 1000
+    }).run()
+}
+
+
+// geodesic layour
+function runGeodesicToFit() {
+    console.log('click ')
+    cy_geo.layout({
+        name: 'circle'
+    }).run()
+}
+
+// geodesic layour
+function runNeighborsToFit() {
+    console.log('click ')
+    cy_neighbors.layout({
+        name: 'circle'
+    }).run()
+}
+
+
