@@ -200,6 +200,9 @@ async function loadGraph(edgeListFile)
     const data2 = await response2.text();
     const edges_raw = data2.split('\n');
 
+    // collect all nodes
+    var nodeSet = new Set();
+
     // get list of all images
     var sources = [];
     var targets = [];
@@ -213,17 +216,19 @@ async function loadGraph(edgeListFile)
         sources.push(Number(edge[0]));
         targets.push(Number(edge[1]));
         distances.push(edge[2]);
+
+        nodeSet.add(edge[0]);
+        nodeSet.add(edge[1]);
     }
 
     // Load Nodes and Images
     imageList = [];
 
     // loop through image name file
-    var N1 = Math.max(...sources);
-    var N2 = Math.max(...targets);
-    var N = Math.max(N1,N2);
+    var N = nodeSet.size;
+
     console.log("Number of Nodes: " + N);
-    for (var i = 1; i <= N; i++) {
+    nodeSet.forEach((i) => {
         var nodeData = {
             data: {
                 id: i,
@@ -233,7 +238,7 @@ async function loadGraph(edgeListFile)
         }
         cy_elements.nodes.push(nodeData)
         imageList.push(imageDirectory + i + '.png')
-    }
+    });
 
     if (N > 500) {
         cy_style[0].style =
