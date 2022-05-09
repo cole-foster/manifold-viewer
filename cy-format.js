@@ -105,8 +105,8 @@ var cy_neighbors_style = [
         selector: 'edge',
         style:
         {
-            //'label': 'data(label)',
-            'width': '4px',
+            'label': 'data(label)',
+            'width': '2px',
             ///'line-color': 'pink'
         }
     },

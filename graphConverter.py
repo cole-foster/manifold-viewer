@@ -1,48 +1,13 @@
 # Cole Foster
 # Convert edgelists to json file for graph viewer
+import os 
 import numpy as np
-from sklearn.manifold import TSNE
-import networkx as nx
 import json
-from tqdm import tqdm
+import argparse
 
+# imports
+from DimensionalityReduction import isomap_on_edgeList,tsne_on_edgeList
 
-# geodesic distance matrix
-def geodesicDistanceMatrix(edgeList):
-
-    # create a graph with all nodes
-    G = nx.Graph()
-    G.add_weighted_edges_from(edgeList)
-    nodes_list = G.nodes
-    N = len(nodes_list)
-    distances = np.zeros([N, N])
-
-    for iti, i in tqdm(enumerate(nodes_list)):
-        for itj, j in enumerate(nodes_list):
-            if j <= i:
-                continue
-            dist = nx.astar_path_length(G, i, j)
-            distances[iti, itj] = dist
-            distances[itj, iti] = dist
-
-    return list(nodes_list), distances
-
-
-def tsne_on_distances(distanceMatrix, perplexity=5):
-    tsne = TSNE(
-        n_components=2,
-        learning_rate="auto",
-        random_state=1,
-        init="random",
-        perplexity=perplexity,
-        metric="precomputed",
-    )
-    embeddings = tsne.fit_transform(distanceMatrix)
-
-    # normalize the data from [0,1]
-    embeddings[:] -= embeddings[:].min()
-    embeddings[:] /= embeddings[:].max()
-    return embeddings
 
 
 def createCytoscapeJSON(nodes, edgeList, embeddings):
@@ -72,34 +37,52 @@ def createCytoscapeJSON(nodes, edgeList, embeddings):
                 }
             }
         )
-
     return data
 
 
 # convert edgeList into geodesic
-def main(path):
-    data_rng = np.loadtxt(path, dtype=str)
+def main(args):
+    path = args.path #"graphs/netvlad/RNG-edgeList_car_model-1_net-vlad.txt"
+
+    if not os.path.exists(args.path):
+        print('Invalid Filename Specified: ', args.path)
+        print('Aborting!')
+        return
+    
+    # loading edgelist from filename  
+    data_rng = np.loadtxt(args.path, dtype=str)
     edgeList = []
     for row in data_rng:
         i, j, dist = row.split(",")
         edgeList.append((int(i), int(j), float(dist)))
 
-    nodes, distanceMatrix = geodesicDistanceMatrix(edgeList)
+    # creating embedding
+    if (args.method == 'isomap'):
+        nodes,embeddings = isomap_on_edgeList(edgeList)
+    elif (args.method == 'tsne'):
+        nodes,embeddings = tsne_on_edgeList(edgeList,perplexity=5)
+    else:
+        print('Invalid Method Passed: ', args.method)
+        print('Aborting!')
+        return 
 
-    embeddings = tsne_on_distances(distanceMatrix)
-
-    # create json object
+    # create json object for saving 
     json_data = createCytoscapeJSON(nodes, edgeList, embeddings)
 
-    # save json file to jsons/
-    filename = path.split("/")[-1].rstrip(".txt")
-    out_path = "jsons/" + filename + ".json"
-    with open(out_path, "w") as write_file:
-        json.dump(json_data, write_file)
+    # create output path
+    outputPath = 'jsons/'
+    filename = path.split("/")[-1].split('.')[0]
+    outputPath += filename + '__' + args.method + '.json'
 
+    # save json file to jsons/
+    with open(outputPath, "w") as write_file:
+        json.dump(json_data, write_file)
     return
 
 
+parser = argparse.ArgumentParser(description='Convert edgelist into json with 2D embedding')
+parser.add_argument('--method','-m', type=str, help='Embedding Technique (isomap,tsne)')
+parser.add_argument('--path','-p', type=str, help='path to the edgeList')
 if __name__ == "__main__":
-    path = "graphs/netvlad/RNG-edgeList_car_model-1_net-vlad.txt"
-    main(path)
+    args = parser.parse_args()
+    main(args)
