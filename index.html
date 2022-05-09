@@ -37,11 +37,12 @@
             <button class="button" type="button" id="clear-button" onclick="clearGraph()"> Clear Graph </button>
             <select class="button" id="sementic-class-list">
                 <option value=" ">Choose A Class</a>
+                <option value="bicycle_model-0">Bicycle Model 1</a>
                 <option value="bicycle_view-11">Bicycle View 11</a>
-                <option value="bicycle_model-1">Bicycle Model 1</a>
-                <option value="train_view-11">Train View 11</a>
-                <option value="train_model-1">Train Model 1</a>
-                <option value="car_model-1">Car Model 1</a>
+                <option value="car_model-0">Car Model 1</a>
+                <option value="car_view-11">Car View 11</a>
+                <option value="bicycle-car_model-0">Bicycle Car Model 1</a>
+                <option value="bicycle-car_view-11">Bicycle Car View 11</a>
             </select>
             <button class="button" type="button" id="button-input-reference"> Input Edges</button>
             <input type="file" id="hidden-input-edges">
@@ -71,8 +72,11 @@
 
             <!-- display number of nodes, number of edges -->
             <div id='main-graph-display'>
-                <span id='main-graph-nodes' style="padding-right: 20px;"> Number of Nodes: </span>
-                <span id='main-graph-edges' style="padding-left: 20px;"> Number of Edges: </span>
+                <span id='main-graph-nodes' style="padding-right: 40px;"> Number of Nodes: </span>
+                <span id='main-graph-edges' style="padding-right: 20px"> Number of Edges: </span>
+                <input type="number" id="main-icon-size" value="20" min="4" max="100">
+                <input type="number" id="main-label-size" value="4" min="1" max="20">
+                <input type="number" id="main-line-opacity" value="1" min="0" max="1" step="0.10">
             </div>
 
             <!-- cytoscape graph container -->

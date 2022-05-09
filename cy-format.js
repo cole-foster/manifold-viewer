@@ -25,8 +25,9 @@ var cy_style = [
             'background-image': 'data(imagePath)',
             'background-fit': 'contain',
             'label': 'data(label)',
-            width: 10,
-            height: 10
+            'font-size':4,
+            'width': 20,
+            'height': 20
         }
     },
 

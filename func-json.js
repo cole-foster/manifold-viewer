@@ -42,8 +42,7 @@ var neighborsRemoved = 1;
 var geo_source = 1;
 var geo_target = 2;
 
-
-
+var cy_elements = {}
 
 /*
 //-------------------------------------------
@@ -122,12 +121,12 @@ document.getElementById('geo-target')
 // load edges via 
 async function loadJSON() {
     console.log("Loading JSON file: ", jsonFile)
-    if (graphCount == 0) {
-        await loadGraph(jsonDirectory + jsonFile);
-    } else {
-        console.log("Max 1 Graphs can be uploaded")
-    }
-    graphCount++;
+    clearGraph(); 
+    //graphCount = 0;
+    //if (graphCount == 0) {
+    await loadGraph(jsonDirectory + jsonFile);
+    graphCount = 1;
+    //}
 
     // update number of elements
     document.getElementById('main-graph-nodes').innerHTML = "Number of Nodes: " + cy.nodes().length;
@@ -188,7 +187,7 @@ function clearGraph() {
 async function loadGraph(jsonPath) {
     console.log("Load Initial Graph");
 
-    var cy_elements = {
+    cy_elements = {
         nodes: [],
         edges: []
     };
@@ -438,86 +437,6 @@ async function loadNeighborsGraph(nodeID) {
 }
 
 
-async function loadGeodesicPath() {
-    console.log("Loading Geodesic Path...");
-
-    // source node image
-    var src_id = document.getElementById('geo-source').value;
-
-    // target node image
-    var tgt_id = document.getElementById('geo-target').value;
-
-    // geodesic path via djikstra algorithm
-    geo_path = cy.elements().dijkstra("#" + src_id, function (edge) {
-        return edge.data('distance')
-    })
-
-    // output geodesic distance
-    var distanceToTarget = geo_path.distanceTo(cy.$("#" + tgt_id))
-    //document.getElementById('geo-output-distance').innerHTML = "Geodesic Distance: " + distanceToTarget.toFixed(2);
-    console.log(distanceToTarget)
-
-    // geodesic path
-    var pathToTarget = geo_path.pathTo(cy.$("#" + tgt_id))
-    console.log(pathToTarget)
-
-    await loadGeodesicGraph(pathToTarget);
-}
-
-// add images via imageListFile
-async function loadGeodesicGraph(pathObject) {
-    console.log("Load Geodesic Path Graph");
-
-    // graph elements
-    cy_geo_elements = {
-        nodes: [],
-        edges: []
-    };
-
-    // for each element in path list
-    pathObject.forEach(element => {
-        if (element._private.group == "nodes") {
-            var nodeData = {
-                data: {
-                    id: element._private.data.id,
-                    imagePath: element._private.data.imagePath,
-                    label: (element._private.data.id)
-                }
-            }
-            cy_geo_elements.nodes.push(nodeData)
-        } else if (element._private.group == "edges") {
-            const [e_color] = element._private.classes;
-            var edgeData = {
-                data: {
-                    'id': element._private.data.id,
-                    'source': element._private.data.source,
-                    'target': element._private.data.target,
-                    'distance': element._private.data.distance,
-                    'label': element._private.data.distance.toFixed(2)
-                },
-                classes: e_color,
-            }
-            cy_geo_elements.edges.push(edgeData);
-        }
-    });
-
-    console.log(cy_geo_elements)
-
-    cy_geo = cytoscape({
-        container: document.getElementById('cy-geo'),
-        elements: cy_geo_elements,
-        layout: cy_geo_layout,
-        style: cy_geo_style
-    })
-
-    cy_geo.on('tap', 'node', function (evt) {
-        currentNeighborNode = evt.target._private.data.id
-        loadNeighborsGraph(currentNeighborNode)
-    });
-
-    return;
-}
-
 
 /*
     LAYOUTS ON BUTTON CALL
@@ -739,5 +658,131 @@ function toggleGeodesic() {
     }
 }
 
+// change icon size for main graph
+document.getElementById("main-icon-size").addEventListener('change', function() {
+    iconSize = Number(document.getElementById("main-icon-size").value);
+    labelSize = Number(document.getElementById("main-label-size").value);
+    lineOpacity = Number(document.getElementById("main-line-opacity").value);
+    cy_style[0].style =
+    {
+        'shape': 'rectangle',
+        'background-image': 'data(imagePath)',
+        'background-fit': 'contain',
+        'label': 'data(label)',
+        'font-size':labelSize,
+        'width': iconSize,
+        'height': iconSize,
+    }
+    cy_style[1].style =
+    {
+        'width': '1px',
+        'line-opacity': lineOpacity
+    }
+
+    if (graphCount > 0) {
+        cy = cytoscape ({
+            container: document.getElementById('cy'),
+            elements: cy_elements,
+            layout: { name: "preset" },
+            style: cy_style
+        })
+    }
+})
+
+// change icon size for main graph
+document.getElementById("main-label-size").addEventListener('change', function() {
+    iconSize = Number(document.getElementById("main-icon-size").value);
+    labelSize = Number(document.getElementById("main-label-size").value);
+    lineOpacity = Number(document.getElementById("main-line-opacity").value);
+    cy_style[0].style =
+    {
+        'shape': 'rectangle',
+        'background-image': 'data(imagePath)',
+        'background-fit': 'contain',
+        'label': 'data(label)',
+        'font-size':labelSize,
+        'width': iconSize,
+        'height': iconSize,
+    }
+    cy_style[1].style =
+    {
+        'width': '1px',
+        'line-opacity': lineOpacity
+    }
+
+    if (graphCount > 0) {
+        cy = cytoscape ({
+            container: document.getElementById('cy'),
+            elements: cy_elements,
+            layout: { name: "preset" },
+            style: cy_style
+        })
+    }
+})
+
+
+// change icon size for main graph
+document.getElementById("main-line-opacity").addEventListener('change', function() {
+    iconSize = Number(document.getElementById("main-icon-size").value);
+    labelSize = Number(document.getElementById("main-label-size").value);
+    lineOpacity = Number(document.getElementById("main-line-opacity").value);
+    cy_style[0].style =
+    {
+        'shape': 'rectangle',
+        'background-image': 'data(imagePath)',
+        'background-fit': 'contain',
+        'label': 'data(label)',
+        'font-size':labelSize,
+        'width': iconSize,
+        'height': iconSize,
+    }
+    cy_style[1].style =
+    {
+        'width': '1px',
+        'line-opacity': lineOpacity
+    }
+
+    if (graphCount > 0) {
+        cy = cytoscape ({
+            container: document.getElementById('cy'),
+            elements: cy_elements,
+            layout: { name: "preset" },
+            style: cy_style
+        })
+    }
+})
+
+
+
+
+// change number of neighbors removed shown
+document.getElementById("neighbors-icon-size").addEventListener('change', function() {
+    sz = Number(document.getElementById("neighbors-icon-size").value);
+    console.log(sz)
+    cy_neighbors_style[0].style =
+    {
+        'width':sz+'px',
+        'height':sz+'px',
+        'shape':'rectangle',
+        'background-image': 'data(imagePath)',
+        'background-fit': 'contain',
+        'label':'data(label)'
+    }
+
+    if (graphCount > 0) {
+        cy_neighbors = cytoscape ({
+            container: document.getElementById('cy-neighbors'),
+            elements: cy_neighbors_elements,
+            layout: cy_neighbors_layout,
+            style: cy_neighbors_style
+        })
+    
+        cy_neighbors.on('tap', 'node', function( evt ){
+            console.log('hi tap')
+            let node = evt.target._private.data.id
+            loadNeighborsGraph(node)
+        });
+    }
+})
 
 

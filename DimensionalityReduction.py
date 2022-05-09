@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse import csr_matrix
+from sklearn.utils.graph_shortest_path import graph_shortest_path
 from sklearn.manifold import TSNE,Isomap
 import networkx as nx
 from tqdm import tqdm 
@@ -36,17 +37,18 @@ def edgeListToGeodesicDistanceMatrix(edgeList):
     nodes_list = list(G.nodes)
     nodes_map = {w: i for i,w in enumerate(nodes_list)}
     N = len(nodes_list)
-    distances = np.zeros([N, N],dtype=float)
+    adjacency_matrix = nx.adjacency_matrix(G,weight='weight')
 
-    for src_node in tqdm(nodes_list):
-        iti = nodes_map[src_node]
-        for tgt_node in nodes_list:
-            itj = nodes_map[tgt_node]
-            if itj <= iti:
-                continue
-            dist = nx.astar_path_length(G, src_node, tgt_node)
-            distances[iti, itj] = dist
-            distances[itj, iti] = dist
+    #for src_node in tqdm(nodes_list):
+    #    iti = nodes_map[src_node]
+    #    for tgt_node in nodes_list:
+    #        itj = nodes_map[tgt_node]
+    #        if itj <= iti:
+    #            continue
+    #        dist = nx.astar_path_length(G, src_node, tgt_node)
+    #        distances[iti, itj] = dist
+    #        distances[itj, iti] = dist
+    distances = graph_shortest_path(adjacency_matrix,directed=False)
 
     return nodes_list, distances
 
