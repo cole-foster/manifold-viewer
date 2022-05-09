@@ -23,8 +23,11 @@ var cy_geo = cytoscape({
 var semanticClass = '';
 var imageDirectory = '';
 
-var edgeDirectory = 'graphs/'
-var edgeListFile = '';
+//var edgeDirectory = 'graphs/'
+//var edgeListFile = '';
+
+var jsonDirectory = 'jsons/';
+var jsonFile = '';
 
 // initializations
 var graphCount = 0
@@ -60,8 +63,8 @@ $("#hidden-input-edges").click(function (e) {
 // button to add graphs
 document.getElementById('hidden-input-edges')
     .addEventListener('change', function () {
-        edgeListFile = this.files[0].name;
-        loadEdges(edgeListFile)
+        jsonFile = this.files[0].name;
+        loadJSON(jsonFile)
     })
 
 // change semantic class
@@ -117,14 +120,12 @@ document.getElementById('geo-target')
 */
 
 // load edges via 
-async function loadEdges() {
-    console.log("Loading edge file: ", edgeListFile)
+async function loadJSON() {
+    console.log("Loading JSON file: ", jsonFile)
     if (graphCount == 0) {
-        await loadGraph(edgeListFile);
-    } else if (graphCount == 1) {
-        await addEdges(edgeListFile);
+        await loadGraph(jsonDirectory + jsonFile);
     } else {
-        console.log("Max 2 Graphs can be uploaded")
+        console.log("Max 1 Graphs can be uploaded")
     }
     graphCount++;
 
@@ -184,175 +185,140 @@ function clearGraph() {
 
 
 // add images via imageListFile
-async function loadGraph(edgeListFile) {
+async function loadGraph(jsonPath) {
     console.log("Load Initial Graph");
-    console.log(graphCount)
 
     var cy_elements = {
         nodes: [],
         edges: []
     };
 
-    // load edge file
-    const response2 = await fetch(edgeDirectory + edgeListFile);
-    const data2 = await response2.text();
-    const edges_raw = data2.split('\n');
+    await $.getJSON(jsonPath, function (data) {
 
-    // collect all nodes
-    var nodeSet = new Set();
-
-    // get list of all images
-    var sources = [];
-    var targets = [];
-    var distances = [];
-    for (let j = 0; j < edges_raw.length; j++) {
-        edge = edges_raw[j].split(',');
-        if (edge == "") {
-            break;
-        }
-        sources.push(Number(edge[0]));
-        targets.push(Number(edge[1]));
-        distances.push(edge[2]);
-
-        nodeSet.add(edge[0]);
-        nodeSet.add(edge[1]);
-    }
-
-    // Load Nodes and Images
-    imageList = [];
-
-    // loop through image name file
-    var N = nodeSet.size;
-
-    console.log("Number of Nodes: " + N);
-    nodeSet.forEach((i) => {
-        var nodeData = {
-            data: {
-                id: Number(i),
-                imagePath: imageDirectory + i + '.png',
-                label: i
+        // add all nodes 
+        data.nodes.forEach(node => {
+            var nodeData = {
+                data: {
+                    id: node.data.id,
+                    imagePath: imageDirectory + node.data.id + '.png',
+                    label: node.data.label
+                },
+                position: {
+                    x: Number(node.position.x),
+                    y: Number(node.position.y)
+                }
             }
-        }
-        cy_elements.nodes.push(nodeData)
-        imageList.push(imageDirectory + i + '.png')
-    });
+            cy_elements.nodes.push(nodeData)
+        })
 
-    if (N > 500) {
-        cy_style[0].style =
-        {
-            'label': 'data(label)'
-        }
-    } else {
-        cy_style[0].style =
-        {
-            'shape': 'rectangle',
-            'background-image': 'data(imagePath)',
-            'background-fit': 'contain',
-            'label': 'data(label)'
-        }
-    }
-
-    var numEdges = 0;
-
-    // loop through edges by source, target, edge length
-    for (let j = 0; j < sources.length; j++) {
-        numEdges++;
-        var edgeData = {
-            data: {
-                'id': graphCount + ":" + sources[j] + '-' + targets[j],
-                'source': sources[j],
-                'target': targets[j],
-                'distance': parseFloat(distances[j]),
-                'label': parseFloat(distances[j]).toFixed(2)
-            },
-            classes: cy_edgeColors[0]
-        }
-        if (j == 0) {
-            console.log(edgeData);
-        }
-        cy_elements.edges.push(edgeData);
-    }
+        // add all edges
+        data.edges.forEach(edge => {
+            var edgeData = {
+                data: {
+                    id: edge.data.id,
+                    source: edge.data.source,
+                    target: edge.data.target,
+                    distance: parseFloat(edge.data.distance),
+                    label: parseFloat(edge.data.distance).toFixed(4)
+                },
+                classes: cy_edgeColors[0]
+            }
+            cy_elements.edges.push(edgeData)
+        })
+    })
 
     cy = cytoscape({
         container: document.getElementById('cy'),
         elements: cy_elements,
-        layout: cy_layout,
+        layout: { name: "preset" },
         style: cy_style
     })
 
+    console.log(cy)
+
     return;
 }
 
+
+async function loadGeodesicPath() {
+    console.log("Loading Geodesic Path...");
+
+    // source node image
+    var src_id = document.getElementById('geo-source').value;
+
+    // target node image
+    var tgt_id = document.getElementById('geo-target').value;
+
+    // geodesic path via djikstra algorithm
+    geo_path = cy.elements().dijkstra("#" + src_id, function (edge) {
+        return edge.data('distance')
+    })
+
+    // output geodesic distance
+    var distanceToTarget = geo_path.distanceTo(cy.$("#" + tgt_id))
+    //document.getElementById('geo-output-distance').innerHTML = "Geodesic Distance: " + distanceToTarget.toFixed(2);
+    console.log(distanceToTarget)
+
+    // geodesic path
+    var pathToTarget = geo_path.pathTo(cy.$("#" + tgt_id))
+    console.log(pathToTarget)
+
+    await loadGeodesicGraph(pathToTarget);
+}
 
 // add images via imageListFile
-async function addEdges(edgeListFile) {
-    console.log("Add Second Graph");
-    console.log(graphCount);
-    cy_edges = []
+async function loadGeodesicGraph(pathObject) {
+    console.log("Load Geodesic Path Graph");
 
-    // Load edges via graph file
-    const response1 = await fetch(edgeDirectory + edgeListFile);
-    const data1 = await response1.text();
-    const edges_raw = data1.split('\n');
+    // graph elements
+    cy_geo_elements = {
+        nodes: [],
+        edges: []
+    };
 
-    var numEdges = 0;
-    var sharedEdges = 0;
-
-    // loop through edges by source, target, edge length
-    var edge = []
-    for (let j = 0; j < edges_raw.length; j++) {
-        edge = edges_raw[j].split(',');
-        if (edge == "") {
-            break;
-        }
-        numEdges++;
-
-        edge = [Number(edge[0]), Number(edge[1]), edge[2]];
-        console.log(edge);
-
-        // check if edge exists
-        var edgeCheck1 = cy.getElementById("0:" + edge[0] + '-' + edge[1])
-        var edgeCheck2 = cy.getElementById("0:" + edge[1] + '-' + edge[0])
-
-        if (edgeCheck1.length || edgeCheck2.length) {
-            sharedEdges++;
-            var edgeData = {
-                group: 'edges',
+    // for each element in path list
+    pathObject.forEach(element => {
+        if (element._private.group == "nodes") {
+            var nodeData = {
                 data: {
-                    'id': graphCount + ":" + edge[0] + '-' + edge[1],
-                    'source': edge[0],
-                    'target': edge[1],
-                    'distance': parseFloat(edge[2]),
-                    'label': parseFloat(edge[2]).toFixed(2)
-                },
-                classes: cy_edgeColors[2]
+                    id: element._private.data.id,
+                    imagePath: element._private.data.imagePath,
+                    label: (element._private.data.id)
+                }
             }
-            cy_edges.push(edgeData);
-
-        } else {
+            cy_geo_elements.nodes.push(nodeData)
+        } else if (element._private.group == "edges") {
+            const [e_color] = element._private.classes;
             var edgeData = {
-                group: 'edges',
                 data: {
-                    'id': graphCount + ":" + edge[0] + '-' + edge[1],
-                    'source': edge[0],
-                    'target': edge[1],
-                    'distance': parseFloat(edge[2]),
-                    'label': parseFloat(edge[2]).toFixed(2)
+                    'id': element._private.data.id,
+                    'source': element._private.data.source,
+                    'target': element._private.data.target,
+                    'distance': element._private.data.distance,
+                    'label': element._private.data.distance.toFixed(2)
                 },
-                classes: cy_edgeColors[1]
+                classes: e_color,
             }
-            cy_edges.push(edgeData);
+            cy_geo_elements.edges.push(edgeData);
         }
-    }
+    });
 
-    cy.add(cy_edges)
-    console.log('Number of Edges: ', numEdges);
-    console.log('Shared Edges: ', sharedEdges);
+    console.log(cy_geo_elements)
+
+    cy_geo = cytoscape({
+        container: document.getElementById('cy-geo'),
+        elements: cy_geo_elements,
+        layout: cy_geo_layout,
+        style: cy_geo_style
+    })
+
+    cy_geo.on('tap', 'node', function (evt) {
+        currentNeighborNode = evt.target._private.data.id
+        loadNeighborsGraph(currentNeighborNode)
+    });
 
     return;
 }
-
-
 
 // add images via imageListFile
 async function loadNeighborsGraph(nodeID) {
@@ -557,6 +523,11 @@ async function loadGeodesicGraph(pathObject) {
     LAYOUTS ON BUTTON CALL
 */
 
+function runLayoutPreset() {
+    clearGraph();
+    loadJSON();
+}
+
 function runLayoutRandom() {
     cy.layout({
         name: 'random'
@@ -720,6 +691,7 @@ function toggleNeighbors() {
 }
 
 
+
 function toggleGeodesic() {
     if (document.getElementById('geodesic-graph-flex').style.visibility == 'hidden') {
         document.getElementById('geodesic-graph-flex').style.visibility = 'visible';
@@ -767,36 +739,5 @@ function toggleGeodesic() {
     }
 }
 
-
-
-// change number of neighbors removed shown
-document.getElementById("neighbors-icon-size").addEventListener('change', function () {
-    sz = Number(document.getElementById("neighbors-icon-size").value);
-    console.log(sz)
-    cy_neighbors_style[0].style =
-    {
-        'width': sz + 'px',
-        'height': sz + 'px',
-        'shape': 'rectangle',
-        'background-image': 'data(imagePath)',
-        'background-fit': 'contain',
-        'label': 'data(label)'
-    }
-
-    if (graphCount > 0) {
-        cy_neighbors = cytoscape({
-            container: document.getElementById('cy-neighbors'),
-            elements: cy_neighbors_elements,
-            layout: cy_neighbors_layout,
-            style: cy_neighbors_style
-        })
-
-        cy_neighbors.on('tap', 'node', function (evt) {
-            console.log('hi tap')
-            let node = evt.target._private.data.id
-            loadNeighborsGraph(node)
-        });
-    }
-})
 
 

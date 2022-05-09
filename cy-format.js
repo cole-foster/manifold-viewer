@@ -5,7 +5,7 @@
 //-------------------------------------------
 */
 
-var cy_edgeColors = ['red','blue','purple']
+var cy_edgeColors = ['red', 'blue', 'purple']
 
 // default layout for graph
 var cy_layout = {
@@ -21,10 +21,12 @@ var cy_style = [
         selector: 'node',
         style:
         {
-            'shape':'rectangle',
+            'shape': 'rectangle',
             'background-image': 'data(imagePath)',
             'background-fit': 'contain',
-            'label':'data(label)'
+            'label': 'data(label)',
+            width: 10,
+            height: 10
         }
     },
 
@@ -34,7 +36,7 @@ var cy_style = [
         style:
         {
             //'label': 'data(distance)',
-            'width': '4px',
+            'width': '1px',
         }
     },
 
@@ -42,31 +44,31 @@ var cy_style = [
     {
         selector: '.red',
         style: {
-            'line-color':'red'
+            'line-color': 'red'
         }
     },
     {
         selector: '.green',
         style: {
-            'line-color':'green'
+            'line-color': 'green'
         }
     },
     {
         selector: '.blue',
         style: {
-            'line-color':'blue'
+            'line-color': 'blue'
         }
     },
     {
         selector: '.purple',
         style: {
-            'line-color':'purple'
+            'line-color': 'purple'
         }
     },
     {
         selector: '.black',
         style: {
-            'line-color':'black'
+            'line-color': 'black'
         }
     }
 ];
@@ -89,12 +91,12 @@ var cy_neighbors_style = [
         selector: 'node',
         style:
         {
-            'width':'80px',
-            'height':'80px',
-            'shape':'rectangle',
+            'width': '80px',
+            'height': '80px',
+            'shape': 'rectangle',
             'background-image': 'data(imagePath)',
             'background-fit': 'contain',
-            'label':'data(label)'
+            'label': 'data(label)'
         }
     },
 
@@ -113,37 +115,37 @@ var cy_neighbors_style = [
     {
         selector: '.red',
         style: {
-            'line-color':'red'
+            'line-color': 'red'
         }
     },
     {
         selector: '.green',
         style: {
-            'line-color':'green'
+            'line-color': 'green'
         }
     },
     {
         selector: '.blue',
         style: {
-            'line-color':'blue'
+            'line-color': 'blue'
         }
     },
     {
         selector: '.purple',
         style: {
-            'line-color':'purple'
+            'line-color': 'purple'
         }
     },
     {
         selector: '.black',
         style: {
-            'line-color':'black'
+            'line-color': 'black'
         }
     },
     {
         selector: '.pink',
         style: {
-            'line-color':'pink'
+            'line-color': 'pink'
         }
     }
 ];
@@ -166,12 +168,12 @@ var cy_geo_style = [
         selector: 'node',
         style:
         {
-            'width':'80px',
-            'height':'80px',
-            'shape':'rectangle',
+            'width': '80px',
+            'height': '80px',
+            'shape': 'rectangle',
             'background-image': 'data(imagePath)',
             'background-fit': 'contain',
-            'label':'data(label)'
+            'label': 'data(label)'
         }
     },
 
@@ -190,37 +192,37 @@ var cy_geo_style = [
     {
         selector: '.red',
         style: {
-            'line-color':'red'
+            'line-color': 'red'
         }
     },
     {
         selector: '.green',
         style: {
-            'line-color':'green'
+            'line-color': 'green'
         }
     },
     {
         selector: '.blue',
         style: {
-            'line-color':'blue'
+            'line-color': 'blue'
         }
     },
     {
         selector: '.purple',
         style: {
-            'line-color':'purple'
+            'line-color': 'purple'
         }
     },
     {
         selector: '.black',
         style: {
-            'line-color':'black'
+            'line-color': 'black'
         }
     },
     {
         selector: '.pink',
         style: {
-            'line-color':'pink'
+            'line-color': 'pink'
         }
     }
 ];

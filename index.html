@@ -1,127 +1,127 @@
 <!doctype html>
 <html>
-    <head>
-        <title>Graph Viewer</title>
 
-        <!-- JavaScript Imports -->
-        <script src='./scripts/jquery.js'></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-        <script src='./scripts/cytoscape.min.js'></script>
-        <script src='./scripts/cola.min.js'></script>
-        <script src='./scripts/cytoscape-cola.js'></script>
-        <script src='./scripts/weaver.min.js'></script>
-        <script src='./scripts/cytoscape-spread.js'></script>
-        <script src='./scripts/cytoscape-euler.js'></script>
-        <script src='./scripts/klay.js'></script>
-        <script src='./scripts/cytoscape-klay.js'></script>
-        <script src="https://unpkg.com/layout-base/layout-base.js"></script>
-        <script src="https://unpkg.com/cose-base/cose-base.js"></script>
-        <script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
+<head>
+    <title>Graph Viewer</title>
 
-        <!-- CSS Stylesheets -->
-        <link rel="stylesheet" type="text/css" href="style.css">
+    <!-- JavaScript Imports -->
+    <script src='./scripts/jquery.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src='./scripts/cytoscape.min.js'></script>
+    <script src='./scripts/cola.min.js'></script>
+    <script src='./scripts/cytoscape-cola.js'></script>
+    <script src='./scripts/weaver.min.js'></script>
+    <script src='./scripts/cytoscape-spread.js'></script>
+    <script src='./scripts/cytoscape-euler.js'></script>
+    <script src='./scripts/klay.js'></script>
+    <script src='./scripts/cytoscape-klay.js'></script>
+    <script src="https://unpkg.com/layout-base/layout-base.js"></script>
+    <script src="https://unpkg.com/cose-base/cose-base.js"></script>
+    <script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
 
-    </head>
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" type="text/css" href="style.css">
 
-    <body>
+</head>
 
-        <!-- Page Title and Centered Text -->
-        <h2 id='page-text'> Manifold Viewer </h2> 
-    
-        <!-- Control Panel -->
-        <div id="control panel">
+<body>
 
-            <!-- Top Buttons for Graph Input and Clear -->
-            <div id="graph-io", class="div-button">
-                <button class="button" type="button" id="clear-button" onclick="clearGraph()"> Clear Graph </button> 
-                <select class="button" id="sementic-class-list">
-                    <option value=" ">Choose A Class</a>
-                    <option value="bicycle">Bicycle</a>
-                    <option value="train">Train</a>
-                    <option value="boat">Boat</a>
-                    <option value="bus">Bus</a>
-                    <option value="aeroplane">Aeroplane</a>
-                    <option value="bicycle-views">Bicycle Views</a>
-                    <option value="bicycle-viewpoint-const">Bicycle Views Const</a>
-                    <option value="full-bicycle"> Full Bicycle</a>  
-                </select>
-                <button class="button" type="button" id="button-input-reference"> Input Edges</button>
-                <input type="file" id="hidden-input-edges">
-                <button class="button" type="button" onclick="toggleMain()"> Toggle Main</button>
-                <button class="button" type="button" onclick="toggleNeighbors()"> Toggle Neighbors</button>
-                <button class="button" type="button" onclick="toggleGeodesic()"> Toggle Geodesic</button>
+    <!-- Page Title and Centered Text -->
+    <h2 id='page-text'> Manifold Viewer </h2>
+
+    <!-- Control Panel -->
+    <div id="control panel">
+
+        <!-- Top Buttons for Graph Input and Clear -->
+        <div id="graph-io" , class="div-button">
+            <button class="button" type="button" id="clear-button" onclick="clearGraph()"> Clear Graph </button>
+            <select class="button" id="sementic-class-list">
+                <option value=" ">Choose A Class</a>
+                <option value="bicycle_view-11">Bicycle View 11</a>
+                <option value="bicycle_model-1">Bicycle Model 1</a>
+                <option value="train_view-11">Train View 11</a>
+                <option value="train_model-1">Train Model 1</a>
+                <option value="car_model-1">Car Model 1</a>
+            </select>
+            <button class="button" type="button" id="button-input-reference"> Input Edges</button>
+            <input type="file" id="hidden-input-edges">
+            <button class="button" type="button" onclick="toggleMain()"> Toggle Main</button>
+            <button class="button" type="button" onclick="toggleNeighbors()"> Toggle Neighbors</button>
+            <button class="button" type="button" onclick="toggleGeodesic()"> Toggle Geodesic</button>
+        </div>
+
+        <!-- Second Row Buttons for Layouts -->
+        <div id="graph-layouts" , class="div-button">
+            <button class="button" type="button" id="button-preset" onclick="runLayoutPreset()"> Preset</button>
+            <button class="button" type="button" id="button-random" onclick="runLayoutRandom()"> Random</button>
+            <button class="button" type="button" id="button-circle" onclick="runLayoutCircle()"> Circle</button>
+            <button class="button" type="button" id="button-cola" onclick="runLayoutCola()"> Cola</button>
+            <button class="button" type="button" id="button-spread" onclick="runLayoutSpread()"> Spread</button>
+            <button class="button" type="button" id="button-euler" onclick="runLayoutEuler()"> Euler</button>
+            <button class="button" type="button" id="button-klay" onclick="runLayoutKlay()"> Klay</button>
+            <button class="button" type="button" id="button-fCose" onclick="runLayoutFCose()"> FCose</button>
+        </div>
+    </div>
+
+    <!-- Container for graph dsiplay and geodesic path display -->
+    <div id='cytoscape-container' class='flex-container'>
+
+        <!-- main graph container -->
+        <div id='main-graph-flex'>
+
+            <!-- display number of nodes, number of edges -->
+            <div id='main-graph-display'>
+                <span id='main-graph-nodes' style="padding-right: 20px;"> Number of Nodes: </span>
+                <span id='main-graph-edges' style="padding-left: 20px;"> Number of Edges: </span>
             </div>
 
-            <!-- Second Row Buttons for Layouts -->
-            <div id="graph-layouts", class="div-button">
-                <button class="button" type="button" id="button-random" onclick="runLayoutRandom()"> Random</button>
-                <button class="button" type="button" id="button-circle" onclick="runLayoutCircle()"> Circle</button>
-                <button class="button" type="button" id="button-cola" onclick="runLayoutCola()"> Cola</button>
-                <button class="button" type="button" id="button-spread" onclick="runLayoutSpread()"> Spread</button>
-                <button class="button" type="button" id="button-euler" onclick="runLayoutEuler()"> Euler</button>
-                <button class="button" type="button" id="button-klay" onclick="runLayoutKlay()"> Klay</button>
-                <button class="button" type="button" id="button-fCose" onclick="runLayoutFCose()"> FCose</button>
+            <!-- cytoscape graph container -->
+            <div id='cy-graph-container'>
+                <div id="cy"></div>
             </div>
         </div>
 
-        <!-- Container for graph dsiplay and geodesic path display -->
-        <div id='cytoscape-container' class='flex-container'>
+        <!-- Neighbors Graph  -->
+        <div id='neighbor-graph-flex'>
+            <p style='text-align: center;'> Neighbors Explorer </p>
 
-            <!-- main graph container -->
-            <div id='main-graph-flex'>
 
-                <!-- display number of nodes, number of edges -->
-                <div id='main-graph-display'>
-                    <span id='main-graph-nodes' style="padding-right: 20px;"> Number of Nodes: </span>
-                    <span id='main-graph-edges' style="padding-left: 20px;"> Number of Edges: </span>
-                </div>
-
-                <!-- cytoscape graph container -->
-                <div id='cy-graph-container'>
-                    <div id="cy" ></div>
-                </div>
+            <!-- Fit to Window Button  -->
+            <div class='geo-control-container' style="padding-left:5px;">
+                <button class="button" type="button" onclick="runNeighborsToFit()"> Fit To Window </button>
+                <input type="number" id="neighbor-id" value="1" min="1" max="100000">
+                <input type="number" id="neighbors-removed" value="1" min="1" max="2">
+                <input type="number" id="neighbors-icon-size" value="80" min="10" max="200">
             </div>
 
-            <!-- Neighbors Graph -->
-            <div id='neighbor-graph-flex'>
-                <p style='text-align: center;'> Neighbors Explorer </p>
-
-                <!-- Fit to Window Button  -->
-                <div class='geo-control-container'' style="padding-left:5px;">
-                    <button class="button" type="button" onclick="runNeighborsToFit()" > Fit To Window </button>
-                    <input type="number" id="neighbor-id" value="1" min="1" max="100000">
-                    <input type="number" id="neighbors-removed" value="1" min="1" max="2">
-                    <input type="number" id="neighbors-icon-size" value="80" min="10" max="200">
-                </div>
-
-                <!-- Cytoscape to Show Neighbors Graph -->
-                <div id='cy-graph-container'>
-                    <div id='cy-neighbors'></div>
-                </div>
-            </div>
-
-
-            <!-- Geodesic Path Graph -->
-            <div id='geodesic-graph-flex'>
-                <p style='text-align: center;'> Geodesic Path Explorer </p>
-
-                <!-- Fit to Window Button  -->
-                <div class='geo-control-container'' style="padding-left:5px;">
-                    <button class="button" type="button" onclick="runGeodesicToFit()" > Fit To Window </button>
-                    <input type="number" id="geo-source" value="1" min="1" max="1000000">
-                    <input type="number" id="geo-target" value="1" min="1" max="1000000">
-                </div>
-
-                <!-- Cytoscape to Show Geodesic Path Graph -->
-                <div id='cy-graph-container'>
-                    <div id='cy-geo'></div>
-                </div>
+            <!-- Cytoscape to Show Neighbors Graph -->
+            <div id='cy-graph-container'>
+                <div id='cy-neighbors'></div>
             </div>
         </div>
 
-        <script src='cy-format.js'></script>
-        <script src='graph.js'></script>
-  
-    </body>
+
+        <!-- Geodesic Path Graph -->
+        <div id='geodesic-graph-flex'>
+            <p style='text-align: center;'> Geodesic Path Explorer </p>
+
+            <!-- Fit to Window Button  -->
+            <div class='geo-control-container' style="padding-left:5px;">
+                <button class="button" type="button" onclick="runGeodesicToFit()"> Fit To Window </button>
+                <input type="number" id="geo-source" value="1" min="1" max="1000000">
+                <input type="number" id="geo-target" value="1" min="1" max="1000000">
+            </div>
+
+            <!-- Cytoscape to Show Geodesic Path Graph -->
+            <div id='cy-graph-container'>
+                <div id='cy-geo'></div>
+            </div>
+        </div>
+    </div>
+
+    <script src='cy-format.js'></script>
+    <script src='func-json.js'></script>
+
+</body>
 
 </html>
